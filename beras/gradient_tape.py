@@ -39,3 +39,31 @@ class GradientTape:
 
         # What tensor and what gradient is for you to implement!
         # compose_input_gradients and compose_weight_gradients are methods that will be helpful
+
+        while queue != []:
+            current = queue.pop(0)
+            upper_grad = grads[id(current)]
+            layer = self.previous_layers[id(current)]
+            if layer is not None:
+                inputs = layer.inputs
+                weights = layer.weights
+                inputs_grad = layer.compose_input_gradients(upper_grad)
+                weights_grad = layer.compose_weight_gradients(upper_grad)
+                for i in range (len(inputs)):
+                    if grads[id(inputs[i])] is None:
+                        grads[id(inputs[i])] = [inputs_grad[i]]
+                    else:
+                       grads[id(inputs[i])] = [grads[id(inputs[i])][0] + inputs_grad[i]]
+                    if id(inputs[i]) not in [id(tensor) for tensor in queue]:
+                        queue.append(inputs[i])
+                for w in range (len(weights)):
+                    if grads[id(weights[w])] is None:
+                        grads[id(weights[w])] = [weights_grad[w]]
+                    else:
+                        grads[id(weights[w])] = [grads[id(weights[w])][0] + weights_grad[w]]
+
+        output = []
+        for s in sources:
+            output.append(grads[id(s)][0])
+
+        return output
